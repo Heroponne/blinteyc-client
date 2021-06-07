@@ -1,0 +1,34 @@
+body {
+	background-color: floralwhite;
+	font-family: 'Arial', sans-serif; 
+}
+
+h2 {
+	margin: 50px auto;
+	text-align: center;
+}
+
+.navbar-brand {
+	font-weight: bold;
+}
+
+#appNav {
+	width: 100%;
+	height: 70px;
+	background-color: #FF8721;
+}
+
+#loginForm, #playDiv {
+	max-width: 450px;
+	margin: 50px auto;
+	padding: 20px;
+	padding-top: 40px;
+	border-radius: 10px;
+	border: solid 1px lightgrey;
+	box-shadow: 10px 5px 5px lightgrey;
+	background-color: bisque;
+}
+
+form > button {
+	margin: 20px auto;
+}

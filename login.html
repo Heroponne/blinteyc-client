@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Greyc | Blind-test</title>
+		<meta charset="utf-8">
+	  	<script src="node_modules/jQuery/jQuery-3.6.0.min.js"></script>
+	  	<script src="bootstrap.min.js"></script>
+	  	<link rel="stylesheet" type="text/css" href="bootstrap.css">
+	  	<link rel="stylesheet" type="text/css" href="style.css">
+	  	<script src="node_modules/vue/dist/vue.global.js"></script>
+	  	<script type="text/javascript" src="node_modules/axios/dist/axios.js"></script>
+	  	
+	</head>
+	<body>
+		<div>
+			<nav class="navbar navbar-expand-lg navbar-light" id="appNav">
+			    <a class="navbar-brand" href="#">BLINDTEYC</a>
+			    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+			    <span class="navbar-toggler-icon"></span>
+			    </button>
+			    <div class="collapse navbar-collapse" id="navbarText">
+				    <span class="navbar-text ml-auto">
+				    	<div id="logoutButton">
+				      		<button class="btn btn-secondary" v-on:click="logout" v-if="logged">Se déconnecter</button>
+				      	</div>
+				    </span>
+			    </div>
+			</nav>
+
+			<h2 id="test">Bienvenue !</h2>
+
+			<div id="loginForm">
+				<form v-on:submit.prevent="login" class="form-group row">
+					<label for="login" class="col-sm-4 col-form-label">Votre pseudo :</label>
+					<div class="col-sm-8">
+						<input id="login" type="text" name="login" v-model="username" class="form-control" autocomplete="off">
+					</div>
+					<button class="btn btn-primary" type="submit">Connexion</button>
+				</form>	
+			</div>
+		</div>
+		<script type="text/javascript" src="navbar.js"></script>
+		<script type="text/javascript" src="login.js"></script>
+	</body>
+</html>

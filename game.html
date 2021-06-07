@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Greyc | Blind-test</title>
+	<meta charset="utf-8">
+	<script
+	  src="https://code.jquery.com/jquery-3.6.0.min.js"
+	  integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+	  crossorigin="anonymous">
+  	</script>
+</head>
+<body>
+	<h3>Jouer une musique</h3>
+	<button onclick="onClick()">Première musique !</button>
+	<div id="track"></div>
+	<div id="result"></div>
+
+	<script>
+		function onClick(){
+			$.get({
+				url : "http://localhost/appli-blind-test/API-blind-test/public/tracks/1",
+				dataType : "json",
+				success : function(response, statut){
+					console.log(response);
+					$('#track').html('<audio controls src="' + response.track_url + '"> Your browser does not support the <code>audio</code> element.</audio><p>Entrez une proposition :</p><input id="answer" type="text"/><button id="answerClick" value="' + response.id + '" onclick="answerClick()">Envoyer</button>');
+				},
+
+				error : function(resultat, code_html, statut){
+					console.log(resultat);
+					var json = JSON.parse(JSON.stringify(resultat));
+					console.log(json);
+					console.log(resultat + " * " + code_html + " * " + statut);
+				},
+
+				complete : function(resultat, statut){
+					console.log("fini !");
+				}
+			});
+		};
+		function answerClick(){
+			$.get({
+				url : "http://localhost/appli-blind-test/API-blind-test/public/answers",
+				data : {
+					"track_id": $('#answerClick').val(),
+					"answer": $('#answer').val()
+				},
+				crossDomain: true,
+				success : function(response, statut){
+					console.log("réponse reçue !")
+					console.log(response);
+					$('#result').html('<p>' + response + '</p');
+				},
+				error : function(resultat, code_html, statut){
+					console.log(resultat + " * " + code_html + " * " + statut);
+				},
+				complete : function(resultat, statut){
+					console.log("fini !");
+				}
+			});
+		}
+	</script>
+</body>
+</html>

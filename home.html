@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Bienvenue !</title>
+    <script src="node_modules/jQuery/jQuery-3.6.0.min.js"></script>
+    <script src="bootstrap.min.js"></script>
+  	<link rel="stylesheet" type="text/css" href="bootstrap.css">
+  	<link rel="stylesheet" type="text/css" href="style.css">
+  	<script src="node_modules/vue/dist/vue.global.js"></script>
+  	<script type="text/javascript" src="node_modules/axios/dist/axios.js"></script>
+  	<!--<script type="text/javascript" src="home.js"></script>-->
+</head>
+<body>
+	<div>
+		<nav class="navbar navbar-expand-lg navbar-light" id="appNav">
+		    <a class="navbar-brand" href="#">BLINDTEYC</a>
+		    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+		    <span class="navbar-toggler-icon"></span>
+		    </button>
+		    <div class="collapse navbar-collapse" id="navbarText">
+			    <span class="navbar-text ml-auto">
+			    	<div id="logoutButton">
+			      	<button class="btn btn-secondary" v-on:click="logout" v-if="logged">Se déconnecter</button>
+			      </div>
+			    </span>
+		    </div>
+		</nav>
+
+		<h2>Blind-Test</h2>
+
+    <div id="playDiv">
+
+      <div id="helloMsg" class="mb-3">
+        <h3 v-if="test">Bonjour {{username}} !</h3>
+      </div>
+
+      <div id="ready"></div>
+
+      <div id="track"></div>
+
+      <div id="answerDiv"></div>
+
+      <div id="result"></div>
+
+    </div> 
+
+  </div>
+
+	<script type="text/javascript" src="navbar.js"></script>
+	<script>
+
+    if (!localStorage.getItem('participationToken')) {
+  		const HelloJulien = {
+  			data(){
+  				return {
+  					test: false,
+  					username: localStorage.getItem('username')
+  				}
+  			},
+  			mounted() {
+  				if(localStorage.getItem('username')){
+  					this.test = true;
+  				}
+  			}
+  		}
+
+  		const hello = Vue.createApp(HelloJulien)
+
+  		const loginvm = hello.mount('#helloMsg')
+    }
+
+		if (!localStorage.getItem('canIPlay')) {
+			notReadyHTML();
+		}
+		var canIPlay;
+		if(localStorage.getItem('canIPlay') === 'false'){
+			canIPlay = setInterval(playGame, 1000);
+		};
+		if (!localStorage.getItem('participationToken')) {
+			document.getElementById('ready').innerHTML = '<button class="btn btn-primary mb-3" onclick="createGame()">Démarrer une partie !</button>';
+		};
+		function getReady(){
+			$.post({
+				url : "http://localhost/appli-blind-test/public/participations/" + localStorage.getItem('participationToken') + "/get_ready",
+				headers : {
+					'sessionToken' : localStorage.getItem('sessionToken'),
+					'participationToken' : localStorage.getItem('participationToken')
+				},
+
+				success : function(response, statut){
+					console.log(response);
+					localStorage.setItem('canIPlay', 'false');
+					canIPlay = setInterval(playGame, 1000);
+					$('#ready').html('');
+				},
+
+				error : function(resultat, code_html, statut){
+					console.log(resultat);
+					var json = JSON.parse(JSON.stringify(resultat));
+					console.log(json);
+					console.log(resultat + " * " + code_html + " * " + statut);
+				}
+			});
+		}
+		function createGame(){
+			$.post({
+				url : "http://localhost/appli-blind-test/public/games",
+				dataType : "json",
+				headers : {
+					'sessionToken' : localStorage.getItem('sessionToken'),
+				},
+				data : JSON.stringify({
+					'participationToken' : localStorage.getItem('participationToken')
+				}),
+
+				success : function(response, statut){
+					console.log("Réussi !");
+					$('#result').html('');
+					localStorage.setItem('participationToken', response['participation_id']);
+					notReadyHTML();
+          $('#helloMsg').html('');
+          $('#answerDiv').html('');
+				},
+
+				error : function(resultat, code_html, statut){
+					var json = JSON.stringify(resultat);
+					console.log(localStorage.getItem('gameToken'));
+					console.log(json);
+					console.log(resultat + " * " + code_html + " * " + statut);
+				}
+			});
+		};
+		function playGame(){
+			$.post({
+				url : "http://localhost/appli-blind-test/public/games/play",
+				dataType : "json",
+				headers : {
+					'sessionToken' : localStorage.getItem('sessionToken')
+				},
+				data : JSON.stringify({
+					'participationToken' : localStorage.getItem('participationToken'),
+				}),
+				success : function(response, statut){
+					console.log(response);
+					if(response.ended){
+						$('#result').html('');
+						$('#track').html('');
+						$('#answerDiv').html('<p>' + response.ended + '</p><p>Votre score final: ' + response.score + '</p>');
+						localStorage.removeItem('canIPlay');
+						localStorage.removeItem('participationToken');
+						$('#ready').html('<button class="btn btn-primary mb-3" onclick="createGame()">Refaire une partie !</button>');
+					} else {
+						$('#result').html('');
+						localStorage.setItem('canIPlay', 'true');
+						localStorage.setItem('trackId', response.track_id);
+						clearInterval(canIPlay);
+						$('#track').html('<audio id="audio"><source src="' + response.track_url + '"> Your browser does not support the <code>audio</code> element.</audio>');
+						$('#answerDiv').html('<p>Entrez une proposition :</p><input id="answer" type="text" autocomplete="off" class="form-control mb-3"/><button id="answerButton" onclick="answerClick()" class="btn btn-primary">Envoyer</button>');
+						$('#answer').focus();
+						$('#answer').keypress(function(e){
+							if (e.keyCode == 13) {
+								answerClick();
+							};
+						});
+						$('audio')[0].play();
+						$('audio').on('ended', playGame);	
+					};
+				},
+				error : function(resultat, code_html, statut){
+					console.log(resultat);
+				}
+			})
+		}
+		function answerClick(){
+			$.post({
+				url : "http://localhost/appli-blind-test/public/answers",
+				data : JSON.stringify({
+					"track_id": localStorage.getItem('trackId'),
+					"answer": $('#answer').val(),
+					"current_time": $('audio')[0].currentTime,
+					'participationToken' : localStorage.getItem('participationToken')
+				}),
+				dataType : "json",
+				headers : {
+					'sessionToken' : localStorage.getItem('sessionToken')
+				},
+				success : function(response, statut){
+					console.log("réponse reçue !");
+					console.log(response.result);
+					if (response.result === "Bonne réponse ! Veuillez patienter pour la suite..."){
+						$('#answerDiv').html('');
+						$('#result').html('<p>' + response.result + '</p><p>Votre score pour cette chanson : ' + response.score + '</p>');	
+					} else {
+						$('#result').html('<p>' + response.result + '</p>');
+					};
+				},
+				error : function(resultat, code_html, statut){
+					console.log(resultat + " * " + code_html + " * " + statut);
+				}
+			});
+		}
+		function notReadyHTML(){
+			$('#ready').html('<h4>Prêt à jouer ?</h4><button class="btn btn-primary" onclick="getReady()">Je suis prêt !</button>');
+		}
+	</script>
+</body>
+</html>

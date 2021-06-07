@@ -1,0 +1,1 @@
+var server = "http://localhost/appli-client-blind-test/";
